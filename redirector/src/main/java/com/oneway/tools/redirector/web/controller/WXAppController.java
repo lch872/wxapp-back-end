@@ -72,6 +72,15 @@ public class WXAppController extends Controller {
 
     }
 
+    public void applyUser() throws Exception {
+
+        List<Userlist> lo = Userlist.dao.find("SELECT `nickName`,`avatarUrl`,`gender`,`openId` from `userlist`");
+
+        String st = Json.getJson().toJson(lo);
+        renderText(st);
+
+    }
+
 
 
 
