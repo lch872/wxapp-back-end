@@ -14,9 +14,6 @@ import com.jfinal.kit.HttpKit;
 import com.oneway.tools.redirector.model.Partylist;
 import com.oneway.tools.redirector.model.Userlist;
 import com.oneway.tools.redirector.model.Applyinfo;
-import sun.rmi.runtime.Log;
-
-import static sun.jvm.hotspot.HelloWorld.e;
 
 public class WXAppController extends Controller {
 
@@ -34,7 +31,7 @@ public class WXAppController extends Controller {
         System.out.printf("%s",openId);
         Userlist user= Userlist.dao.findFirst("select `id` from `userlist` where openId=?", openId);
         Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where confirm=1 and userId=? and partyId=?",user.getId(), actId);
-        sss.put("isApply",info != null);
+        sss.put("isApply",info == null?0:1);
 
         Partylist act = Partylist.dao.findById(actId);
         long totalViews = act.getViews();
