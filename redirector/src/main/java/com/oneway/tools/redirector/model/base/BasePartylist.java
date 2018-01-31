@@ -99,4 +99,16 @@ public abstract class BasePartylist<M extends BasePartylist<M>> extends Model<M>
 		return getStr("address");
 	}
 
+
+	public M setViews(java.lang.Long views) {
+		set("views", views);
+		return (M)this;
+	}
+
+	public java.lang.Long getViews() {
+		return getLong("views");
+	}
+
+
+
 }

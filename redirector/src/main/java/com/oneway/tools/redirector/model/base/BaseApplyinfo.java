@@ -36,13 +36,13 @@ public abstract class BaseApplyinfo<M extends BaseApplyinfo<M>> extends Model<M>
 		return getInt("userId");
 	}
 
-	public M setSetConfirm(java.lang.Integer setConfirm) {
-		set("setConfirm", setConfirm);
+	public M setConfirm(java.lang.Integer  confirm) {
+		set("confirm", confirm);
 		return (M)this;
 	}
 
-	public java.lang.Integer getSetConfirm() {
-		return getInt("setConfirm");
+	public java.lang.Integer getConfirm() {
+		return getInt("confirm");
 	}
 
 	public M setCreateTime(java.util.Date createTime) {

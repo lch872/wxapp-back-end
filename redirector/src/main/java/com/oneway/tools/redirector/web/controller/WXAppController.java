@@ -7,20 +7,43 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.jfinal.kit.HttpKit;
 import com.oneway.tools.redirector.model.Partylist;
 import com.oneway.tools.redirector.model.Userlist;
+import com.oneway.tools.redirector.model.Applyinfo;
+import sun.rmi.runtime.Log;
+
+import static sun.jvm.hotspot.HelloWorld.e;
 
 public class WXAppController extends Controller {
 
     public void main() throws Exception {
+
         List<Partylist> list = Partylist.dao.find("select * from `partylist`");
         Partylist sss = list.get(0);
+
+        String openId = getPara("openId");
+        String actId = getPara("actId");
+
+        List<Applyinfo> sss22 = Applyinfo.dao.find("SELECT * from `applyinfo` where `confirm`=1");
+        sss.put("applied",sss22.size());
+
+        System.out.printf("%s",openId);
+        Userlist user= Userlist.dao.findFirst("select `id` from `userlist` where openId=?", openId);
+        Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where confirm=1 and userId=? and partyId=?",user.getId(), actId);
+        sss.put("isApply",info != null);
+
+        Partylist act = Partylist.dao.findById(actId);
+        long totalViews = act.getViews();
+        sss.put("views",++totalViews);
+        act.setViews(totalViews).update();
+
+
+
+//        act.setViews()
 
         Map dd = new HashMap();
         dd.put("icon","money");
@@ -42,18 +65,9 @@ public class WXAppController extends Controller {
 
         sss.put("table",pp);
 
-        List<String> sList = new ArrayList<String>();
-        sList.add("../images/icon.jpg");
-        sList.add("https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIGDumd2Fd9bKjJsy8YaAICc8Aa9eeicJELqEDYyvOm5fPVJm5elVBXga2QzB7adwsGB1fcP2U9nZg/0");
-        sList.add("../images/icon.jpg");
-        sList.add("https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIGDumd2Fd9bKjJsy8YaAICc8Aa9eeicJELqEDYyvOm5fPVJm5elVBXga2QzB7adwsGB1fcP2U9nZg/0");
-        sList.add("../images/icon.jpg");
-        sList.add("https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIGDumd2Fd9bKjJsy8YaAICc8Aa9eeicJELqEDYyvOm5fPVJm5elVBXga2QzB7adwsGB1fcP2U9nZg/0");
-
-
-        sss.put("userArr",sList);
-
-        sss.put("views",3699);
+        List<Userlist> lo = Userlist.dao.find("SELECT `avatarUrl` from `userlist` LIMIT 6");
+        List<String> urls = lo.stream().map(userlist -> userlist.getAvatarUrl()).collect(Collectors.toList());
+        sss.put("userArr",urls);
 
         String st = Json.getJson().toJson(sss);
         renderText(st);
@@ -81,7 +95,28 @@ public class WXAppController extends Controller {
 
     }
 
+    public void apply() throws Exception {
 
+        String openId = getPara("openId", "null");
+        String activityId = getPara("activity", "null");
+        String confirm = getPara("confirm", "0");
+        Userlist userlist = Userlist.dao.findFirst("select `id` from `userlist` where openId=?", openId);
+
+
+        Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where userId=?", userlist.getId());
+        if (info == null){ // 没有申请过，创建新的
+            Applyinfo apply = new Applyinfo();
+            apply.setPartyId(Integer.parseInt(activityId));
+            apply.setUserId(userlist.getId().intValue());
+            apply.setConfirm(1);
+            apply.save();
+        }else { // 已经有过记录，更新
+            info.setConfirm(Integer.parseInt(confirm)).update();
+        }
+
+        renderText("{\"OK\":1}");
+
+    }
 
 
 
