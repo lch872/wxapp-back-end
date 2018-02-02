@@ -113,9 +113,8 @@ public class IndexController extends Controller {
     }
 
 
-//    public  Map makeLineData(String time, String platform) throws Exception{
-//
-//    }
+
+
 
     public List<Report> checkLineData(String startTime, String endTime, String platform, String type) throws Exception {
         String ss =  String.format("SELECT DISTINCT MainTable.`createTime`,IFNULL(SubTable.`TotalNum`, 0) AS TotalNum FROM `report` AS MainTable LEFT JOIN  \n" +

@@ -17,7 +17,7 @@ import com.oneway.tools.redirector.model.Applyinfo;
 
 public class WXAppController extends Controller {
 
-    public void main() throws Exception {
+    public void detail() throws Exception {
 
         List<Partylist> list = Partylist.dao.find("select * from `partylist`");
         Partylist sss = list.get(0);
@@ -30,6 +30,7 @@ public class WXAppController extends Controller {
 
         System.out.printf("%s",openId);
         Userlist user= Userlist.dao.findFirst("select `id` from `userlist` where openId=?", openId);
+
         Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where confirm=1 and userId=? and partyId=?",user.getId(), actId);
         sss.put("isApply",info == null?0:1);
 
@@ -37,10 +38,6 @@ public class WXAppController extends Controller {
         long totalViews = act.getViews();
         sss.put("views",++totalViews);
         act.setViews(totalViews).update();
-
-
-
-//        act.setViews()
 
         Map dd = new HashMap();
         dd.put("icon","money");
@@ -83,7 +80,23 @@ public class WXAppController extends Controller {
 
     }
 
-    public void applyUser() throws Exception {
+
+    public void main() throws Exception {
+
+        List<Partylist> list = Partylist.dao.find("select id,title,`imageUrl` from partylist ORDER BY id DESC");
+
+        for (final Partylist item : list) {
+            item.put("url",String.format("../detail/detail?actId=%s",item.getId()));
+
+        }
+
+        String st = Json.getJson().toJson(list);
+
+        renderText(st);
+    }
+
+
+    public void applied() throws Exception {
 
         List<Userlist> lo = Userlist.dao.find("SELECT `nickName`,`avatarUrl`,`gender`,`openId` from `userlist`");
 
