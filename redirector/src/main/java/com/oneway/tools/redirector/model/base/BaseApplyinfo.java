@@ -27,13 +27,13 @@ public abstract class BaseApplyinfo<M extends BaseApplyinfo<M>> extends Model<M>
 		return getInt("partyId");
 	}
 
-	public M setUserId(java.lang.Integer userId) {
+	public M setUserId(java.lang.String userId) {
 		set("userId", userId);
 		return (M)this;
 	}
 
-	public java.lang.Integer getUserId() {
-		return getInt("userId");
+	public java.lang.String getUserId() {
+		return getStr("userId");
 	}
 
 	public M setConfirm(java.lang.Integer  confirm) {

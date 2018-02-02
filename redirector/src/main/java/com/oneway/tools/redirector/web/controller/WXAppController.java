@@ -28,11 +28,14 @@ public class WXAppController extends Controller {
         List<Applyinfo> sss22 = Applyinfo.dao.find("SELECT * from `applyinfo` where `confirm`=1");
         sss.put("applied",sss22.size());
 
-        System.out.printf("%s",openId);
-        Userlist user= Userlist.dao.findFirst("select `id` from `userlist` where openId=?", openId);
+        if (openId != ""){
+            System.out.println(openId);
+            Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where confirm=1 and userId=? and partyId=?",openId, actId);
+            sss.put("isApply",info == null?0:1);
+        }else {
+            sss.put("isApply",0);
+        }
 
-        Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where confirm=1 and userId=? and partyId=?",user.getId(), actId);
-        sss.put("isApply",info == null?0:1);
 
         Partylist act = Partylist.dao.findById(actId);
         long totalViews = act.getViews();
@@ -59,9 +62,15 @@ public class WXAppController extends Controller {
 
         sss.put("table",pp);
 
-        List<Userlist> lo = Userlist.dao.find("SELECT `avatarUrl` from `userlist` LIMIT 6");
-        List<String> urls = lo.stream().map(userlist -> userlist.getAvatarUrl()).collect(Collectors.toList());
-        sss.put("userArr",urls);
+        List<Applyinfo> lo = Applyinfo.dao.find("SELECT * from `applyinfo` where `confirm`=1 ORDER BY `createTime` DESC LIMIT 6");
+        List<String> icons = new ArrayList<String>();
+
+        for (final Applyinfo item : lo) {
+                   Userlist aUser = Userlist.dao.findFirst("select * from `userlist` where openId=?", item.getUserId());
+                    icons.add(aUser.getAvatarUrl());
+        }
+
+        sss.put("userArr",icons);
 
         String st = Json.getJson().toJson(sss);
         renderText(st);
@@ -87,11 +96,10 @@ public class WXAppController extends Controller {
 
         for (final Partylist item : list) {
             item.put("url",String.format("../detail/detail?actId=%s",item.getId()));
-
         }
 
         String st = Json.getJson().toJson(list);
-
+        System.out.println(st);
         renderText(st);
     }
 
@@ -110,14 +118,12 @@ public class WXAppController extends Controller {
         String openId = getPara("openId", "null");
         String activityId = getPara("activity", "null");
         String confirm = getPara("confirm", "0");
-        Userlist userlist = Userlist.dao.findFirst("select `id` from `userlist` where openId=?", openId);
 
-
-        Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where userId=?", userlist.getId());
+        Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where userId=?", openId);
         if (info == null){ // 没有申请过，创建新的
             Applyinfo apply = new Applyinfo();
             apply.setPartyId(Integer.parseInt(activityId));
-            apply.setUserId(userlist.getId().intValue());
+            apply.setUserId(openId);
             apply.setConfirm(1);
             apply.save();
         }else { // 已经有过记录，更新
