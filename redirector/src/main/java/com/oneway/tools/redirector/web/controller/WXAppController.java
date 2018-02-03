@@ -15,9 +15,19 @@ import com.oneway.tools.redirector.model.Partylist;
 import com.oneway.tools.redirector.model.Userlist;
 import com.oneway.tools.redirector.model.Applyinfo;
 
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class WXAppController extends Controller {
 
     public void detail() throws Exception {
+        System.out.println("detail");
+
+
+
 
         List<Partylist> list = Partylist.dao.find("select * from `partylist`");
         Partylist sss = list.get(0);
@@ -77,6 +87,8 @@ public class WXAppController extends Controller {
     }
 
     public void adduser() throws Exception {
+        System.out.println("adduser");
+
 
         IndexController.trustEveryone();
         Userlist data =  getModel(Userlist.class, "", false);
@@ -91,6 +103,9 @@ public class WXAppController extends Controller {
 
 
     public void main() throws Exception {
+        System.out.println("main");
+
+
 
         List<Partylist> list = Partylist.dao.find("select id,title,`imageUrl` from partylist ORDER BY id DESC");
 
@@ -105,6 +120,8 @@ public class WXAppController extends Controller {
 
 
     public void applied() throws Exception {
+        System.out.println("applied");
+
 
         List<Userlist> lo = Userlist.dao.find("SELECT `nickName`,`avatarUrl`,`gender`,`openId` from `userlist`");
 
@@ -113,7 +130,26 @@ public class WXAppController extends Controller {
 
     }
 
+
+    public void getOpenId() throws Exception {
+        String js_code = getPara("js_code");
+
+
+        String aUrl = String.format("https://api.weixin.qq.com/sns/jscode2session?appid=wx2fdfd17e37781b91&secret=ddc696a333d44c713d8723f26d0e8182&grant_type=authorization_code&js_code=%s",js_code);
+        String result = null;
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder().url(aUrl).build();
+
+        Response response = client.newCall(request).execute();
+        result = response.body().string();
+
+
+        renderText(result);
+    }
     public void apply() throws Exception {
+        System.out.println("apply");
+
+
 
         String openId = getPara("openId", "null");
         String activityId = getPara("activity", "null");
