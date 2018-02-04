@@ -1,4 +1,7 @@
 package com.oneway.tools.redirector.web.controller;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.jfinal.core.Controller;
 import com.jfinal.json.Json;
 
@@ -15,11 +18,9 @@ import com.oneway.tools.redirector.model.Partylist;
 import com.oneway.tools.redirector.model.Userlist;
 import com.oneway.tools.redirector.model.Applyinfo;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
+
+//import static com.sun.activation.registries.LogSupport.log;
 
 public class WXAppController extends Controller {
 
@@ -154,6 +155,7 @@ public class WXAppController extends Controller {
         String openId = getPara("openId", "null");
         String activityId = getPara("activity", "null");
         String confirm = getPara("confirm", "0");
+        String formId = getPara("formId", "null");
 
         Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where userId=?", openId);
         if (info == null){ // 没有申请过，创建新的
@@ -161,15 +163,126 @@ public class WXAppController extends Controller {
             apply.setPartyId(Integer.parseInt(activityId));
             apply.setUserId(openId);
             apply.setConfirm(1);
+            apply.setFormId(formId);
             apply.save();
         }else { // 已经有过记录，更新
             info.setConfirm(Integer.parseInt(confirm)).update();
+            info.setFormId(formId).update();
         }
 
         renderText("{\"OK\":1}");
 
     }
 
+    public void sendMessage() throws Exception {
+        System.out.println("sendMessage");
+        List<Applyinfo> lo = Applyinfo.dao.find("SELECT * from `applyinfo` where `confirm`=1 ORDER BY `createTime`");
+
+        for (final Applyinfo item : lo) {
+
+            sendMessageA(item.getUserId(),item.getFormId());
+        }
+
+        renderText("ok");
+
+    }
+
+    public boolean sendMessageA(String openId, String formId) throws Exception {
+
+
+
+        String tokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wx2fdfd17e37781b91&secret=ddc696a333d44c713d8723f26d0e8182";
+        String jsonData = null;
+        OkHttpClient client1 = new OkHttpClient();
+        Request tokenRequest = new Request.Builder().url(tokenUrl).build();
+
+        Response response1 = client1.newCall(tokenRequest).execute();
+        jsonData = response1.body().string();
+
+        Gson gson = new Gson();
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        map = gson.fromJson(jsonData, map.getClass());
+        String access_token=(String) map.get("access_token");
+
+        MediaType mediaType = MediaType.parse("application/json");
+
+
+
+
+
+
+
+        JsonObject total = new JsonObject();
+
+        JsonObject data = new JsonObject();
+        JsonObject key1 = new JsonObject();
+        key1.addProperty("value","第二组");
+//        key1.addProperty("color","#4a4a4a");
+        data.add("keyword1",key1);
+
+        JsonObject key2 = new JsonObject();
+        key2.addProperty("value","周末日常话剧活动");
+//        key2.addProperty("color","#4a4a4a");
+        data.add("keyword2",key2);
+
+        JsonObject key3 = new JsonObject();
+        key3.addProperty("value","客村站D出口丽影广场B座5栋1102室");
+//        key3.addProperty("color","#4a4a4a");
+        data.add("keyword3 ",key3);
+
+
+        JsonObject key4 = new JsonObject();
+        key4.addProperty("value","2018年2月10日 13:30");
+//        key4.addProperty("color","#4a4a4a");
+        data.add("keyword4 ",key4);
+
+//        JsonObject key5 = new JsonObject();
+//        key5.addProperty("value","请务必准时到达活动现场进行签到，如果不能参加，请与活动管理者取得联系，谢谢。");
+////        key5.addProperty("color","#4a4a4a");
+//        data.add("keyword5 ",key5);
+        total.add("data",data);
+
+
+
+        total.addProperty("template_id","JGEk6Ooi6hoi15TCrdPnwvwtcRWIsv7NtqHVw5rFLvU");
+        total.addProperty("page","/pages/apply/apply");
+        total.addProperty("form_id",formId);
+        total.addProperty("touser",openId);
+        total.addProperty("emphasis_keyword","keyword1.DATA");
+
+
+        String url = String.format("https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=%s",access_token);
+        //创建RequestBody对象，将参数按照指定的MediaType封装
+        RequestBody requestBody = RequestBody.create(mediaType,total.toString());
+        Request request = new Request
+                .Builder()
+                .post(requestBody)//Post请求的参数传递
+                .url(url)
+                .build();
+
+        OkHttpClient client = new OkHttpClient();
+
+            Response response = client.newCall(request).execute();
+            String result = response.body().string();
+            response.body().close();
+
+        System.out.println(access_token);
+        System.out.println(total.toString());
+        System.out.println(result);
+
+
+            return true;
+    }
+
+    public void log() throws Exception {
+        System.out.println("log");
+        String openId = getPara("log", "null");
+
+
+        System.out.println(openId);
+        renderText("ok");
+    }
 
 
 }

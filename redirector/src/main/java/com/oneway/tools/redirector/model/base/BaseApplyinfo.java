@@ -36,6 +36,24 @@ public abstract class BaseApplyinfo<M extends BaseApplyinfo<M>> extends Model<M>
 		return getStr("userId");
 	}
 
+	public M setFormId(java.lang.String formId) {
+		set("formId", formId);
+		return (M)this;
+	}
+
+	public java.lang.String getFormId() {
+		return getStr("formId");
+	}
+
+	public M setArrived(java.lang.Integer  arrived) {
+		set("arrived", arrived);
+		return (M)this;
+	}
+
+	public java.lang.Integer getArrived() {
+		return getInt("arrived");
+	}
+
 	public M setConfirm(java.lang.Integer  confirm) {
 		set("confirm", confirm);
 		return (M)this;
