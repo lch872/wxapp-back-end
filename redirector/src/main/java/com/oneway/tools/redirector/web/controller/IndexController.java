@@ -98,8 +98,6 @@ public class IndexController extends Controller {
 
     public void getdata() throws Exception {
         String time = getPara("time", "2018-1-24");
-        String platform = getPara("platform", "ios").toLowerCase();
-
 
         Map m1 = new HashMap();
         Map ios = makeData(time,"ios");

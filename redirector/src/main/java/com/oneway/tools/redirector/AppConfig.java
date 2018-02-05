@@ -34,7 +34,7 @@ public class AppConfig extends JFinalConfig {
 
     @Override
     public void configPlugin(Plugins me) {//u3LT3eSc7by6hT0
-        DruidPlugin dp = new DruidPlugin("jdbc:mysql://127.0.0.1/Test", "root", "123");
+        DruidPlugin dp = new DruidPlugin("jdbc:mysql://127.0.0.1/Test", "root", "u3LT3eSc7by6hT");
         me.add(dp);
         ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
         me.add(arp);

@@ -59,9 +59,19 @@ public abstract class BaseApplyinfo<M extends BaseApplyinfo<M>> extends Model<M>
 		return (M)this;
 	}
 
+	public java.lang.Integer getGroup() {
+		return getInt("group");
+	}
+
+	public M setGroup(java.lang.Integer  group) {
+		set("group", group);
+		return (M)this;
+	}
+
 	public java.lang.Integer getConfirm() {
 		return getInt("confirm");
 	}
+
 
 	public M setCreateTime(java.util.Date createTime) {
 		set("createTime", createTime);
