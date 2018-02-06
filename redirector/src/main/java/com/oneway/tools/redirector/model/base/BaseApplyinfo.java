@@ -45,6 +45,19 @@ public abstract class BaseApplyinfo<M extends BaseApplyinfo<M>> extends Model<M>
 		return getStr("formId");
 	}
 
+
+
+	public M setTag(java.lang.String tag) {
+		set("tag", tag);
+		return (M)this;
+	}
+
+	public java.lang.String getTag() {
+		return getStr("tag");
+	}
+
+
+
 	public M setArrived(java.lang.Integer  arrived) {
 		set("arrived", arrived);
 		return (M)this;
@@ -54,10 +67,6 @@ public abstract class BaseApplyinfo<M extends BaseApplyinfo<M>> extends Model<M>
 		return getInt("arrived");
 	}
 
-	public M setConfirm(java.lang.Integer  confirm) {
-		set("confirm", confirm);
-		return (M)this;
-	}
 
 	public java.lang.Integer getGroup() {
 		return getInt("group");
@@ -67,6 +76,13 @@ public abstract class BaseApplyinfo<M extends BaseApplyinfo<M>> extends Model<M>
 		set("group", group);
 		return (M)this;
 	}
+
+
+	public M setConfirm(java.lang.Integer  confirm) {
+		set("confirm", confirm);
+		return (M)this;
+	}
+
 
 	public java.lang.Integer getConfirm() {
 		return getInt("confirm");

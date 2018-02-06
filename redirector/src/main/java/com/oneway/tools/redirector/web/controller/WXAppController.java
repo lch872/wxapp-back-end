@@ -23,34 +23,33 @@ public class WXAppController extends Controller {
     public void detail() throws Exception {
         System.out.println("detail");
 
-
-
-
-        List<Partylist> list = Partylist.dao.find("select * from `partylist`");
-        Partylist sss = list.get(0);
-
-
         String actId = getPara("actId");
+
+        Partylist sss = Partylist.dao.findById(actId);
+        long totalViews = sss.getViews();
+        sss.put("views",++totalViews);
+        sss.setViews(totalViews).update();
+
 
         List<Applyinfo> sss22 = Applyinfo.dao.find("SELECT * from `applyinfo` where `confirm`=1");
         sss.put("applied",sss22.size());
 
 
-        Partylist act = Partylist.dao.findById(actId);
-        long totalViews = act.getViews();
-        sss.put("views",++totalViews);
-        act.setViews(totalViews).update();
+
 
         Map<String,Object> dd = new HashMap();
         dd.put("icon","money");
+        dd.put("tag","费用:");
         dd.put("text",sss.getPay());
 
         Map<String,Object> dd2 = new HashMap();
         dd2.put("icon","time");
+        dd2.put("tag","时间:");
         dd2.put("text",sss.getDate());
 
         Map<String,Object> dd3 = new HashMap();
         dd3.put("icon","local");
+        dd3.put("tag","地点:");
         dd3.put("text",sss.getAddress());
 
         List<Map> pp = new ArrayList();
@@ -89,13 +88,7 @@ public class WXAppController extends Controller {
     public void main() throws Exception {
         System.out.println("main");
 
-
-
         List<Partylist> list = Partylist.dao.find("select id,title,`imageUrl` from partylist ORDER BY id DESC");
-
-        for (final Partylist item : list) {
-            item.put("url",String.format("../detail/detail?actId=%s",item.getId()));
-        }
 
         String st = Json.getJson().toJson(list);
         System.out.println(st);
@@ -114,7 +107,7 @@ public class WXAppController extends Controller {
         List<Userlist> lo = appliedList("500");
         aMap.put("appliedCount",lo.size());
 
-        if (limit != null){
+        if (limit != null && lo .size() >= Integer.parseInt(limit)){
             aMap.put("appliedList",lo.subList(0,Integer.parseInt(limit)));
         }else {
             aMap.put("appliedList",lo);
@@ -125,6 +118,9 @@ public class WXAppController extends Controller {
             System.out.println(openId);
             Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where confirm=1 and partyId=? and userId=?",actId, openId);
             aMap.put("isApply",info == null ? 0 : 1);
+            if (info != null) {
+                aMap.put("tag", info.getTag());
+            }
         }else {
             aMap.put("isApply",0);
         }
@@ -135,7 +131,7 @@ public class WXAppController extends Controller {
     }
 
     public List<Userlist> appliedList(String limit) throws Exception {
-        String sql = String.format("SELECT b.`nickName`, b.`avatarUrl`,b.`gender`,b.`openId`  from `applyinfo` a left join `userlist` b on a.`userId`=b.`openId` WHERE a.`confirm` = 1 ORDER BY a.`createTime` LIMIT %s",limit);
+        String sql = String.format("SELECT b.`nickName`, b.`avatarUrl`,b.`gender`,b.`openId`, a.`tag` from `applyinfo` a left join `userlist` b on a.`userId`=b.`openId` WHERE a.`confirm` = 1 ORDER BY a.`updataTime` DESC LIMIT %s",limit);
         List<Userlist> lo = Userlist.dao.find(sql);
 
         return lo;
@@ -160,7 +156,7 @@ public class WXAppController extends Controller {
         System.out.println("apply");
 
 
-
+        String tag = getPara("tag", "初出茅庐");
         String openId = getPara("openId", "null");
         String activityId = getPara("activity", "null");
         String confirm = getPara("confirm", "0");
@@ -173,6 +169,7 @@ public class WXAppController extends Controller {
             apply.setUserId(openId);
             apply.setConfirm(1);
             apply.setFormId(formId);
+            apply.setTag(tag);
             apply.save();
         }else { // 已经有过记录，更新
             info.setConfirm(Integer.parseInt(confirm)).update();
@@ -187,10 +184,15 @@ public class WXAppController extends Controller {
         System.out.println("sendMessage");
 
         String listString = getPara("group");
+        String actId = getPara("actId");
 
         makeGroup(listString);
 
-        sendMessageA("sss","sss");
+        List<Applyinfo> info = Applyinfo.dao.find("select * from `applyinfo` where confirm=1 and partyId=?",actId);
+        System.out.println(info);
+        for (Applyinfo o : info) {
+            sendNotification(o);
+        }
 
 
         renderText("ok");
@@ -212,10 +214,9 @@ public class WXAppController extends Controller {
     }
 
 
-    public boolean sendMessageA(String openId, String formId) throws Exception {
+    public boolean sendNotification(Applyinfo info) throws Exception {
 
-
-
+        char[] numArray = { '零', '一', '二', '三', '四', '五', '六', '七', '八', '九' };
 
         String tokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wx2fdfd17e37781b91&secret=ddc696a333d44c713d8723f26d0e8182";
         String jsonData = null;
@@ -231,24 +232,27 @@ public class WXAppController extends Controller {
         MediaType mediaType = MediaType.parse("application/json");
 
 
+        String groupName = String.format("第%s组",numArray[info.getGroup()]);
+        Partylist party = Partylist.dao.findFirst("select * from `partylist` where id=?",info.getPartyId());
 
-        String aa = "{\n" +
+
+        String aa = String.format("{\n" +
                 "        \"keyword1\":{\n" +
-                "            \"value\":\"第二组\"\n" +
+                "            \"value\":\"%s\"\n" +
                 "        },\n" +
                 "        \"keyword2\":{\n" +
-                "            \"value\":\"周末日常话剧活动\"\n" +
+                "            \"value\":\"%s\"\n" +
                 "        },\n" +
-                "        \"keyword3 \":{\n" +
-                "            \"value\":\"客村站D出口丽影广场B座5栋1102室\"\n" +
+                "        \"keyword3\":{\n" +
+                "            \"value\":\"%s\"\n" +
                 "        },\n" +
-                "        \"keyword4 \":{\n" +
-                "            \"value\":\"2018年2月10日 13:30\"\n" +
+                "        \"keyword4\":{\n" +
+                "            \"value\":\"%s\"\n" +
                 "        },\n" +
-                "        \"keyword5 \":{\n" +
-                "            \"value\":\"请务必准时到达活动现场进行签到，如果不能参加，请与活动管理者取得联系，谢谢。\"\n" +
+                "        \"keyword5\":{\n" +
+                "            \"value\":\"请务必准时到达活动现场进行签到，如时间上有冲突不能参加，请与活动主办者取得联系，谢谢。\"\n" +
                 "        }\n" +
-                "    }";
+                "    }", groupName, party.getTitle(), party.getAddress(), party.getDate());
 
         Map<String, Object> total = new HashMap<>();
 
@@ -258,34 +262,31 @@ public class WXAppController extends Controller {
 
         System.out.println(total);
 
-        total.put("template_id","JGEk6Ooi6hoi15TCrdPnwvwtcRWIsv7NtqHVw5rFLvU");
+        total.put("template_id","XcG32liQDgwwxzuf7rOE-via6CPieBhTuhqu9r7HnBY");
         total.put("page","/pages/apply/apply");
-        total.put("form_id",formId);
-        total.put("touser",openId);
+        total.put("form_id",info.getFormId());
+        total.put("touser",info.getUserId());
         total.put("emphasis_keyword","keyword1.DATA");
 
 
         String url = String.format("https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=%s",access_token);
         //创建RequestBody对象，将参数按照指定的MediaType封装
-        RequestBody requestBody = RequestBody.create(mediaType,total.toString());
-        Request request = new Request
-                .Builder()
-                .post(requestBody)//Post请求的参数传递
-                .url(url)
-                .build();
+        RequestBody requestBody = RequestBody.create(mediaType,JSON.toJSONString(total));
+        Request request = new Request.Builder().post(requestBody).url(url).build();
 
         OkHttpClient client = new OkHttpClient();
 
-            Response response = client.newCall(request).execute();
-            String result = response.body().string();
-            response.body().close();
+        Response response = client.newCall(request).execute();
+        String result = response.body().string();
+        response.body().close();
 
-        System.out.println(access_token);
-        System.out.println(total.toString());
+//        System.out.println(access_token);
+        System.out.println(total);
         System.out.println(result);
 
         return true;
     }
+
 
     public void log() throws Exception {
         System.out.println("log");
