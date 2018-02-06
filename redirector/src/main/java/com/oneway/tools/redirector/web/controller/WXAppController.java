@@ -73,10 +73,14 @@ public class WXAppController extends Controller {
 
         IndexController.trustEveryone();
         Userlist data =  getModel(Userlist.class, "", false);
-        System.out.println(data);
-        Userlist userlist = Userlist.dao.findFirst("select `id` from `userlist` where openId=?", data.getOpenId());
-        if (userlist == null){
+//        System.out.println(data);
+        Userlist user = Userlist.dao.findFirst("select * from `userlist` where openId=?", data.getOpenId());
+        if (user == null){
             data.save();
+        }else {
+            user.setNickName(data.getNickName()).update();
+            user.setAvatarUrl(data.getAvatarUrl()).update();
+            user.setGender(data.getGender()).update();
         }
         renderText("{\"OK\":1}");
 
@@ -107,7 +111,7 @@ public class WXAppController extends Controller {
         List<Userlist> lo = appliedList("500");
         aMap.put("appliedCount",lo.size());
 
-        if (limit != null && lo .size() >= Integer.parseInt(limit)){
+        if (limit != null && lo.size() >= Integer.parseInt(limit)){
             aMap.put("appliedList",lo.subList(0,Integer.parseInt(limit)));
         }else {
             aMap.put("appliedList",lo);
@@ -174,6 +178,7 @@ public class WXAppController extends Controller {
         }else { // 已经有过记录，更新
             info.setConfirm(Integer.parseInt(confirm)).update();
             info.setFormId(formId).update();
+            info.setTag(tag).update();
         }
 
         renderText("{\"OK\":1}");
