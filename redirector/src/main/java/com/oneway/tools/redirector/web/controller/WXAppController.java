@@ -108,7 +108,10 @@ public class WXAppController extends Controller {
         String openId = getPara("openId","openId");
 
         Map aMap = new HashMap();
-        List<Userlist> lo = appliedList("500");
+        String sql = String.format("SELECT b.`nickName`, b.`avatarUrl`,b.`gender`,b.`openId`, a.`tag` from `applyinfo` a left join `userlist` b on a.`userId`=b.`openId` WHERE a.`confirm` = 1 and a.`partyId` = %s ORDER BY a.`updataTime` DESC", actId);
+        List<Userlist> lo = Userlist.dao.find(sql);
+
+
         aMap.put("appliedCount",lo.size());
 
         if (limit != null && lo.size() >= Integer.parseInt(limit)){
@@ -134,12 +137,6 @@ public class WXAppController extends Controller {
 
     }
 
-    public List<Userlist> appliedList(String limit) throws Exception {
-        String sql = String.format("SELECT b.`nickName`, b.`avatarUrl`,b.`gender`,b.`openId`, a.`tag` from `applyinfo` a left join `userlist` b on a.`userId`=b.`openId` WHERE a.`confirm` = 1 ORDER BY a.`updataTime` DESC LIMIT %s",limit);
-        List<Userlist> lo = Userlist.dao.find(sql);
-
-        return lo;
-    }
 
     public void getOpenId() throws Exception {
         String js_code = getPara("js_code");
@@ -191,6 +188,8 @@ public class WXAppController extends Controller {
         String listString = getPara("group");
         String actId = getPara("actId");
 
+        Partylist party = Partylist.dao.findById(Integer.parseInt(actId));
+        party.setGroupInfo(listString).update();
         makeGroup(listString);
 
         List<Applyinfo> info = Applyinfo.dao.find("select * from `applyinfo` where confirm=1 and partyId=?",actId);
@@ -206,6 +205,7 @@ public class WXAppController extends Controller {
 
     public void makeGroup(String listString) throws Exception {
         JSONArray jsonArray = JSON.parseArray(listString);
+
         int group = 0;
         for (Object o : jsonArray) {
             JSONArray ja = (JSONArray) o;
@@ -268,7 +268,7 @@ public class WXAppController extends Controller {
         System.out.println(total);
 
         total.put("template_id","XcG32liQDgwwxzuf7rOE-via6CPieBhTuhqu9r7HnBY");
-        total.put("page","/pages/apply/apply");
+        total.put("page","/pages/manager/manager");
         total.put("form_id",info.getFormId());
         total.put("touser",info.getUserId());
         total.put("emphasis_keyword","keyword1.DATA");
@@ -302,12 +302,21 @@ public class WXAppController extends Controller {
         renderText("ok");
     }
 //
-//    public void () throws Exception {
-//        System.out.println("log");
-//        String openId = getPara("log", "null");
-//
-//
-//        System.out.println(openId);
-//        renderText("ok");
-//    }
+    public void groupList() throws Exception {
+        System.out.println("log");
+
+        String actId = getPara("actId");
+        Partylist party = Partylist.dao.findById(Integer.parseInt(actId));
+
+        Map<String,Object> res = new HashMap<>();
+        res.put("hasGroup",0);
+        if (party.getGroupInfo() != null){
+            res.put("hasGroup",1);
+            String group = party.getGroupInfo();
+            JSONArray jsonArray = JSON.parseArray(group);
+            res.put("list",jsonArray);
+        }
+
+        renderText(JSON.toJSONString(res));
+    }
 }

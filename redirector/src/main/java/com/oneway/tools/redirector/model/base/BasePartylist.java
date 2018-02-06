@@ -77,9 +77,19 @@ public abstract class BasePartylist<M extends BasePartylist<M>> extends Model<M>
 		return (M)this;
 	}
 
+	public java.lang.String getGroupInfo() {
+		return getStr("groupInfo");
+	}
+
+	public M setGroupInfo(java.lang.String groupInfo) {
+		set("groupInfo", groupInfo);
+		return (M)this;
+	}
+
 	public java.lang.String getImageUrl() {
 		return getStr("imageUrl");
 	}
+
 
 	public M setDetail(java.lang.String detail) {
 		set("detail", detail);
