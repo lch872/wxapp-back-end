@@ -188,6 +188,12 @@ public class WXAppController extends Controller {
         String listString = getPara("group");
         String actId = getPara("actId");
 
+
+        System.out.println("listString");
+        System.out.println(listString);
+
+
+
         Partylist party = Partylist.dao.findById(Integer.parseInt(actId));
         party.setGroupInfo(listString).update();
         makeGroup(listString);
