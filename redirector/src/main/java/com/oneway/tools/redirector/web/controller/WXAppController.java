@@ -311,12 +311,18 @@ public class WXAppController extends Controller {
         Map<String,Object> res = new HashMap<>();
         res.put("hasGroup",0);
         if (party.getGroupInfo() != null){
+            System.out.println("11111");
+            System.out.println(party.getGroupInfo());
             res.put("hasGroup",1);
             String group = party.getGroupInfo();
             JSONArray jsonArray = JSON.parseArray(group);
+            System.out.println("222222");
+            System.out.println(jsonArray);
             res.put("list",jsonArray);
         }
 
+        System.out.println("33333");
+        System.out.println(JSON.toJSONString(res));
         renderText(JSON.toJSONString(res));
     }
 }
