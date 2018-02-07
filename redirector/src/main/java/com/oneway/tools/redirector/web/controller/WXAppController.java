@@ -31,7 +31,7 @@ public class WXAppController extends Controller {
         sss.setViews(totalViews).update();
 
 
-        List<Applyinfo> sss22 = Applyinfo.dao.find("SELECT * from `applyinfo` where `confirm`=1");
+        List<Applyinfo> sss22 = Applyinfo.dao.find("SELECT * from `applyinfo` where `confirm`=1 and `partyId`=?",actId);
         sss.put("applied",sss22.size());
 
 
@@ -59,12 +59,8 @@ public class WXAppController extends Controller {
 
         sss.put("table",pp);
 
-//        List<Userlist> lo = Userlist.dao.find("SELECT b.`avatarUrl` from `applyinfo` a left join `userlist` b on a.`userId`=b.`openId` WHERE a.`confirm` = 1 ORDER BY a.`createTime` DESC LIMIT 6");
-//
-//        sss.put("userArr",lo);
-
         String st = Json.getJson().toJson(sss);
-        renderText(st);
+        renderText(resultText(1,"OK",st));
     }
 
     public void adduser() throws Exception {
@@ -82,7 +78,7 @@ public class WXAppController extends Controller {
             user.setAvatarUrl(data.getAvatarUrl()).update();
             user.setGender(data.getGender()).update();
         }
-        renderText("{\"OK\":1}");
+        renderText(resultText(1,"加入用户成功"));
 
     }
 
@@ -91,19 +87,19 @@ public class WXAppController extends Controller {
 
     public void main() throws Exception {
         System.out.println("main");
-
+//        grouplll();
         List<Partylist> list = Partylist.dao.find("select id,title,`imageUrl` from partylist ORDER BY id DESC");
 
         String st = Json.getJson().toJson(list);
         System.out.println(st);
-        renderText(st);
+        renderText(resultText(1,"OK",st));
     }
 
 
 
     public void appliedInfo() throws Exception {
         System.out.println("applied");
-        String limit = getPara("limit");
+        Integer limit = getParaToInt("limit");
         String actId = getPara("actId","actId");
         String openId = getPara("openId","openId");
 
@@ -114,8 +110,8 @@ public class WXAppController extends Controller {
 
         aMap.put("appliedCount",lo.size());
 
-        if (limit != null && lo.size() >= Integer.parseInt(limit)){
-            aMap.put("appliedList",lo.subList(0,Integer.parseInt(limit)));
+        if (limit != null && lo.size() >= limit){
+            aMap.put("appliedList",lo.subList(0,limit));
         }else {
             aMap.put("appliedList",lo);
         }
@@ -133,7 +129,7 @@ public class WXAppController extends Controller {
         }
 
         String st = Json.getJson().toJson(aMap);
-        renderText(st);
+        renderText(resultText(1,"OK",st));
 
     }
 
@@ -151,34 +147,47 @@ public class WXAppController extends Controller {
         result = response.body().string();
 
 
-        renderText(result);
+        renderText(resultText(1,"OK",result));
+
     }
     public void apply() throws Exception {
         System.out.println("apply");
 
-
+        Integer actId = getParaToInt("activity", 0);
+        Integer isConfirm = getParaToInt("confirm",0);
         String tag = getPara("tag", "初出茅庐");
-        String openId = getPara("openId", "null");
-        String activityId = getPara("activity", "null");
-        String confirm = getPara("confirm", "0");
-        String formId = getPara("formId", "null");
+        String openId = getPara("openId", "NULL");
+        String formId = getPara("formId", "NULL");
+
+        List<Applyinfo> applyList = Applyinfo.dao.find("SELECT * from `applyinfo` where `confirm`=1 and `partyId`=?",actId);
+        Partylist party = Partylist.dao.findById(actId);
+
+        if ( isConfirm == 1 && applyList.size() >= party.getLimit() ){
+            renderText(resultText(0,"剧组盒饭已达上限，请关注下一期"));
+            return;
+        }
+
+
 
         Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where userId=?", openId);
+
+
         if (info == null){ // 没有申请过，创建新的
             Applyinfo apply = new Applyinfo();
-            apply.setPartyId(Integer.parseInt(activityId));
+            apply.setPartyId(actId);
             apply.setUserId(openId);
             apply.setConfirm(1);
             apply.setFormId(formId);
             apply.setTag(tag);
             apply.save();
         }else { // 已经有过记录，更新
-            info.setConfirm(Integer.parseInt(confirm)).update();
+            info.setConfirm(isConfirm).update();
             info.setFormId(formId).update();
             info.setTag(tag).update();
         }
 
-        renderText("{\"OK\":1}");
+
+        renderText(resultText(isConfirm,isConfirm == 1 ?"报名成功" : "操作成功"));
 
     }
 
@@ -186,15 +195,10 @@ public class WXAppController extends Controller {
         System.out.println("sendMessage");
 
         String listString = getPara("group");
-        String actId = getPara("actId");
+        Integer actId = getParaToInt("actId");
 
 
-        System.out.println("listString");
-        System.out.println(listString);
-
-
-
-        Partylist party = Partylist.dao.findById(Integer.parseInt(actId));
+        Partylist party = Partylist.dao.findById(actId);
         party.setGroupInfo(listString).update();
         makeGroup(listString);
 
@@ -205,7 +209,7 @@ public class WXAppController extends Controller {
         }
 
 
-        renderText("ok");
+        renderText(resultText(1,"发送成功"));
 
     }
 
@@ -305,30 +309,80 @@ public class WXAppController extends Controller {
 
 
         System.out.println(openId);
-        renderText("ok");
+        renderText(resultText(1,"OK"));
     }
 //
     public void groupList() throws Exception {
         System.out.println("log");
 
-        String actId = getPara("actId");
-        Partylist party = Partylist.dao.findById(Integer.parseInt(actId));
+        Integer actId = getParaToInt("actId");
+        Partylist party = Partylist.dao.findById(actId);
 
         Map<String,Object> res = new HashMap<>();
         res.put("hasGroup",0);
         if (party.getGroupInfo() != null){
-            System.out.println("11111");
             System.out.println(party.getGroupInfo());
             res.put("hasGroup",1);
             String group = party.getGroupInfo();
             JSONArray jsonArray = JSON.parseArray(group);
-            System.out.println("222222");
             System.out.println(jsonArray);
             res.put("list",jsonArray);
         }
 
-        System.out.println("33333");
-        System.out.println(JSON.toJSONString(res));
-        renderText(JSON.toJSONString(res));
+        renderText(resultText(1,"OK",JSON.toJSONString(res)));
     }
+
+    public void signIn() throws Exception {
+        String actId = getPara("actId");
+        String openId = getPara("openId");
+        Partylist party = Partylist.dao.findById(actId);
+        List<Object> sss = new ArrayList<>();
+        if (party.getGroupInfo() != null ) {
+            String group = party.getGroupInfo();
+            JSONArray jsonArray = JSON.parseArray(group);
+            sss = jsonArray;
+
+            loop: for (final Object o : jsonArray) {
+                    JSONArray ja = (JSONArray) o;
+                    for (final Object o1 : ja) {
+                        JSONObject ja1 = (JSONObject) o1;
+                        if (openId.equals(ja1.get("openId"))) {
+                            ja1.put("signIn", 1);
+                            party.setGroupInfo(jsonArray.toJSONString()).update();
+                            renderText(resultText(1,"签到成功"));
+                            return;
+                        }
+                    }
+            }
+
+            renderText(resultText(0,"剧组未找到你的角色提名"));
+            return;
+        }
+
+        renderText(resultText(0,"剧组筹备中，请等待通告"));
+
+
+    }
+
+    public String resultText(int isOk,String msg, String data) throws Exception {
+        return String.format("{\"success\":%d,\"message\":\"%s\",\"content\":%s}",isOk,msg,data);
+    }
+
+    public String resultText(int isOk,String msg) throws Exception {
+        return String.format("{\"success\":%d,\"message\":\"%s\"}",isOk,msg);
+    }
+
+
+//    public void grouplll() throws Exception {
+//        List<Applyinfo> party = Applyinfo.dao.find("select GROUP_CONCAT(userId) name,`group`  from `applyinfo`where `partyId`=3 GROUP BY `group`");
+////        String ss = (String) party.get(0);
+////        JSONObject obj  = JSON.parseObject(ss);
+//        Applyinfo oo =  party.get(0);
+//        System.out.println(oo);
+//
+//        String sss = (String) oo;
+//        JSONObject obj  = JSON.parseObject(ss);
+//        renderText(oo.toString());
+//    }
+
 }
