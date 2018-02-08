@@ -10,15 +10,22 @@ import com.jfinal.json.Json;
 
 import java.util.*;
 
+import com.jfinal.log.Log;
+import com.jfinal.plugin.activerecord.Db;
+import com.jfinal.plugin.activerecord.Record;
 import com.oneway.tools.redirector.model.Partylist;
 import com.oneway.tools.redirector.model.Userlist;
 import com.oneway.tools.redirector.model.Applyinfo;
 
 import okhttp3.*;
 
+import static com.jfinal.plugin.activerecord.Db.find;
+
 //import static com.sun.activation.registries.LogSupport.log;
 
 public class WXAppController extends Controller {
+
+    Log lo = Log.getLog(WXAppController.class);
 
     public void detail() throws Exception {
         System.out.println("detail");
@@ -109,6 +116,13 @@ public class WXAppController extends Controller {
 
 
         aMap.put("appliedCount",lo.size());
+
+        if (openId.equals("ou34b5Naz-ZGQAVMz71BtM-Jef90") || openId.equals("ou34b5HL6d4TB32oehkQRQbkExY8") || openId.equals("ou34b5Edr7HYCOYJfG8Pm48eIARg")){
+            aMap.put("sudo",1);
+        }
+
+
+
 
         if (limit != null && lo.size() >= limit){
             aMap.put("appliedList",lo.subList(0,limit));
@@ -278,7 +292,7 @@ public class WXAppController extends Controller {
         System.out.println(total);
 
         total.put("template_id","XcG32liQDgwwxzuf7rOE-via6CPieBhTuhqu9r7HnBY");
-        total.put("page","/pages/manager/manager");
+        total.put("page","/pages/group/group");
         total.put("form_id",info.getFormId());
         total.put("touser",info.getUserId());
         total.put("emphasis_keyword","keyword1.DATA");
@@ -373,16 +387,35 @@ public class WXAppController extends Controller {
     }
 
 
-//    public void grouplll() throws Exception {
-//        List<Applyinfo> party = Applyinfo.dao.find("select GROUP_CONCAT(userId) name,`group`  from `applyinfo`where `partyId`=3 GROUP BY `group`");
-////        String ss = (String) party.get(0);
-////        JSONObject obj  = JSON.parseObject(ss);
-//        Applyinfo oo =  party.get(0);
-//        System.out.println(oo);
-//
-//        String sss = (String) oo;
-//        JSONObject obj  = JSON.parseObject(ss);
-//        renderText(oo.toString());
-//    }
+    public void grouplll() throws Exception {
+
+        List<Record> re =  Db.find("select GROUP_CONCAT(userId) name,`group`  from `applyinfo`where `partyId`=3 GROUP BY `group`");
+
+
+        for (Record record : re) {
+            String ss =record.get("name");
+            String[] ppp =  ss.split(",");
+            List<String> stringB = Arrays.asList(ppp);
+            System.out.println(stringB);
+        }
+
+        renderText("");
+    }
+
+    public void addAct() throws Exception {
+        System.out.println("addAct");
+        String openId = getPara("openId");
+        System.out.println(openId);
+
+        if (!openId.equals("ou34b5Naz-ZGQAVMz71BtM-Jef90") || !openId.equals("ou34b5HL6d4TB32oehkQRQbkExY8") || !openId.equals("ou34b5Edr7HYCOYJfG8Pm48eIARg")){
+            renderText(resultText(0,"操作被禁止"));
+            return;
+        }
+
+        Partylist data =  getModel(Partylist.class, "", true);
+        data.save();
+        renderText(resultText(1,"操作成功"));
+    }
+
 
 }
