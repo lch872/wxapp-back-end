@@ -208,18 +208,44 @@ public class WXAppController extends Controller {
     public void sendMessage() throws Exception {
         System.out.println("sendMessage");
 
-        String listString = getPara("group");
+        String listString = getPara("group","NULL");
         Integer actId = getParaToInt("actId");
 
+        String msgType = getPara("type");
 
-        Partylist party = Partylist.dao.findById(actId);
-        party.setGroupInfo(listString).update();
-        makeGroup(listString);
+        String tokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wx2fdfd17e37781b91&secret=ddc696a333d44c713d8723f26d0e8182";
+        OkHttpClient client1 = new OkHttpClient();
+        Request tokenRequest = new Request.Builder().url(tokenUrl).build();
 
-        List<Applyinfo> info = Applyinfo.dao.find("select * from `applyinfo` where confirm=1 and partyId=?",actId);
-        System.out.println(info);
-        for (Applyinfo o : info) {
-            sendNotification(o);
+        Response response1 = client1.newCall(tokenRequest).execute();
+        String jsonData = response1.body().string();
+
+        JSONObject obj22 = JSON.parseObject(jsonData);
+        String access_token = obj22.getString("access_token");
+        MediaType mediaType = MediaType.parse("application/json");
+
+        String url = String.format("https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=%s",access_token);
+
+
+
+        if (!listString.equals("NULL")) {
+            Partylist party = Partylist.dao.findById(actId);
+            party.setGroupInfo(listString).update();
+            makeGroup(listString);
+        }
+
+        if(msgType.equals("reminder")){
+            List<Applyinfo> infoList = Applyinfo.dao.find("select * from `applyinfo` where confirm=1 and partyId=?",actId);
+            System.out.println(infoList);
+
+            for (Applyinfo info : infoList) {
+                sendReminder(info, mediaType, url);
+            }
+        }else if (msgType.equals("feedback")){
+            List<Applyinfo> infoList = Applyinfo.dao.find("select * from `applyinfo` where confirm=1 and `arrived`=1 and partyId=?",actId);
+            for (Applyinfo info : infoList) {
+                sendFeedback(info, mediaType, url);
+            }
         }
 
 
@@ -242,25 +268,8 @@ public class WXAppController extends Controller {
         }
     }
 
-
-    public boolean sendNotification(Applyinfo info) throws Exception {
-
+    public void sendReminder(Applyinfo info,MediaType type,String url) throws Exception {
         char[] numArray = { '零', '一', '二', '三', '四', '五', '六', '七', '八', '九' };
-
-        String tokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wx2fdfd17e37781b91&secret=ddc696a333d44c713d8723f26d0e8182";
-        String jsonData = null;
-        OkHttpClient client1 = new OkHttpClient();
-        Request tokenRequest = new Request.Builder().url(tokenUrl).build();
-
-        Response response1 = client1.newCall(tokenRequest).execute();
-        jsonData = response1.body().string();
-
-
-        JSONObject obj22 = JSON.parseObject(jsonData);
-        String access_token = obj22.getString("access_token");
-        MediaType mediaType = MediaType.parse("application/json");
-
-
         String groupName = String.format("第%s组",numArray[info.getGroup()]);
         Partylist party = Partylist.dao.findFirst("select * from `partylist` where id=?",info.getPartyId());
 
@@ -296,24 +305,43 @@ public class WXAppController extends Controller {
         total.put("form_id",info.getFormId());
         total.put("touser",info.getUserId());
         total.put("emphasis_keyword","keyword1.DATA");
+        System.out.println(total);
 
+        sendNotification(url,type,JSON.toJSONString(total));
+    }
 
-        String url = String.format("https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=%s",access_token);
-        //创建RequestBody对象，将参数按照指定的MediaType封装
-        RequestBody requestBody = RequestBody.create(mediaType,JSON.toJSONString(total));
+    public void sendFeedback(Applyinfo info,MediaType type,String url) throws Exception {
+        String aa = String.format("{\"keyword1\":{\"value\":\"感谢你参加本次活动，我们希望你能分享你的感受和意见。\"},\n" +
+                "\"keyword2\":{\"value\":\"众乐话剧社\"}}");
+
+        System.out.println(aa);
+
+        Map<String, Object> total = new HashMap<>();
+
+        JSONObject data = new JSONObject();
+        JSONObject obj = JSON.parseObject(aa);
+        total.put("data",obj);
+
+        System.out.println(total);
+
+        total.put("template_id","hn4Dsc43XIMgZ_PdMsC1KpHCsanVv_cx3nZD1wydDcg");
+        total.put("page","pages/feedback/feedback?actId=3");
+        total.put("form_id",info.getFormIdFinal());
+        total.put("touser",info.getUserId());
+        System.out.println(total);
+
+        sendNotification(url,type,JSON.toJSONString(total));
+    }
+
+    public void sendNotification(String url, MediaType type, String body) throws Exception {
+
+        RequestBody requestBody = RequestBody.create(type,body);
         Request request = new Request.Builder().post(requestBody).url(url).build();
-
         OkHttpClient client = new OkHttpClient();
 
         Response response = client.newCall(request).execute();
         String result = response.body().string();
         response.body().close();
-
-//        System.out.println(access_token);
-        System.out.println(total);
-        System.out.println(result);
-
-        return true;
     }
 
 
@@ -391,7 +419,6 @@ public class WXAppController extends Controller {
 
         List<Record> re =  Db.find("select GROUP_CONCAT(userId) name,`group`  from `applyinfo`where `partyId`=3 GROUP BY `group`");
 
-
         for (Record record : re) {
             String ss =record.get("name");
             String[] ppp =  ss.split(",");
@@ -407,14 +434,46 @@ public class WXAppController extends Controller {
         String openId = getPara("openId");
         System.out.println(openId);
 
-        if (!openId.equals("ou34b5Naz-ZGQAVMz71BtM-Jef90") || !openId.equals("ou34b5HL6d4TB32oehkQRQbkExY8") || !openId.equals("ou34b5Edr7HYCOYJfG8Pm48eIARg")){
-            renderText(resultText(0,"操作被禁止"));
+        if (openId.equals("ou34b5Naz-ZGQAVMz71BtM-Jef90")||openId.equals("ou34b5HL6d4TB32oehkQRQbkExY8")||openId.equals("ou34b5Edr7HYCOYJfG8Pm48eIARg")){
+            Partylist data =  getModel(Partylist.class, "", true);
+            data.save();
+            renderText(resultText(1,"操作成功"));
             return;
         }
 
-        Partylist data =  getModel(Partylist.class, "", true);
-        data.save();
-        renderText(resultText(1,"操作成功"));
+        renderText(resultText(0,"操作被禁止"));
+    }
+
+    public void feedback() throws Exception {
+        System.out.println("feedback");
+        String openId = getPara("openId");
+        String advice = getPara("advice", "无评论");
+        String actId = getPara("actId","3");
+        String star = getPara("star","0");
+
+        System.out.println(openId);
+        System.out.println(advice);
+        System.out.println(actId);
+
+        Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where confirm=1 and partyId=? and userId=?",actId, openId);
+        info.setAdvice(advice).update();
+        info.setStar(star).update();
+
+        renderText(resultText(1,"提交成功"));
+    }
+
+    public void saveFinalFormId() throws Exception {
+        System.out.println("saveFinalFormId");
+        String openId = getPara("openId");
+        String actId = getPara("actId","3");
+        String finalFormId = getPara("finalFormId");
+
+        System.out.println(openId);
+        System.out.println(actId);
+
+        Applyinfo info = Applyinfo.dao.findFirst("select * from `applyinfo` where confirm=1 and partyId=? and userId=?",actId, openId);
+        info.setFormIdFinal(finalFormId).update();
+        renderText(resultText(1,"提交成功"));
     }
 
 

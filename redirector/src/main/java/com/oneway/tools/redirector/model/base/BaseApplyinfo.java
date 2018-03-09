@@ -46,6 +46,14 @@ public abstract class BaseApplyinfo<M extends BaseApplyinfo<M>> extends Model<M>
 	}
 
 
+	public java.lang.String getFormIdFinal() {
+		return getStr("formIdFinal");
+	}
+
+	public M setFormIdFinal(java.lang.String formIdFinal) {
+		set("formIdFinal", formIdFinal);
+		return (M)this;
+	}
 
 	public M setTag(java.lang.String tag) {
 		set("tag", tag);
@@ -66,6 +74,27 @@ public abstract class BaseApplyinfo<M extends BaseApplyinfo<M>> extends Model<M>
 	public java.lang.Integer getArrived() {
 		return getInt("arrived");
 	}
+
+
+	public java.lang.String getAdvice() {
+		return getStr("advice");
+	}
+
+	public M setAdvice(java.lang.String advice) {
+		set("advice", advice);
+		return (M)this;
+	}
+
+	public java.lang.String getStar() {
+		return getStr("star");
+	}
+
+	public M setStar(java.lang.String star) {
+		set("star", star);
+		return (M)this;
+	}
+
+
 
 
 	public java.lang.Integer getGroup() {
