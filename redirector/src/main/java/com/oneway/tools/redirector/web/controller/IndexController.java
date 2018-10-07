@@ -1,24 +1,29 @@
 package com.oneway.tools.redirector.web.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.jfinal.core.Controller;
 import com.jfinal.json.Json;
 import com.jfinal.kit.StrKit;
 import com.jfinal.log.Log;
 import com.oneway.tools.redirector.model.Report;
 import com.oneway.tools.redirector.utils.UrlUtils;
+import net.sf.json.JSONObject;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-
 
 /**
  * offer 跳转测试，需记录：
@@ -94,6 +99,56 @@ public class IndexController extends Controller {
         String st = Json.getJson().toJson(ddd);
 
         renderText(st);
+    }
+
+static boolean isEnable = true;
+    public void jack8a() {
+        String eStr = getPara("enable");
+         if (eStr!=null){
+             isEnable = eStr.equals("1");
+         }
+
+        if (isEnable){
+            String url = "http://42.51.174.12:8877/getAllBuyRecords?page=1&rows=10";
+            String json = loadJSON(url);
+            renderText(json);
+        }else {
+
+            String  fake = "{\"rows\": [\n" +
+                    "\t{\n" +
+                    "\t\"id\": 0,\n" +
+                    "\t\"buyLeague\": \"A组超级杯联赛\",\n" +
+                    "\t\"buyTeam\": \"古德曼 vs 阿克奇\",\n" +
+                    "\t\"buyDetail\": \"(滚球) (全场大小) 大2.5球，水位1.050 \",\n" +
+                    "\t\"buyMoney\": 50.0,\n" +
+                    "\t}\n" +
+                    "],\n" +
+                    "\"total\": 10\n" +
+                    "}\n";
+
+            JSONObject json_test = JSONObject.fromObject(fake);
+
+            renderJson(json_test);
+
+        }
+    }
+
+	    public static String loadJSON(String url) {
+        StringBuilder json = new StringBuilder();
+        try {
+            URL oracle = new URL(url);
+            URLConnection yc = oracle.openConnection();
+            BufferedReader in = new BufferedReader(new InputStreamReader(
+                    yc.getInputStream(),"utf-8"));//防止乱码
+            String inputLine = null;
+            while ((inputLine = in.readLine()) != null) {
+                json.append(inputLine);
+            }
+            in.close();
+        } catch (MalformedURLException e) {
+        } catch (IOException e) {
+        }
+        return json.toString();
     }
 
     public void getdata() throws Exception {
