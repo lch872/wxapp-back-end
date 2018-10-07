@@ -21,11 +21,6 @@ public class TimeJob implements Runnable {
     Log log = Log.getLog(WXAppController.class);
     int lastMsgId = 0;
     public void run() {
-        long lastTime = IndexController.lastTime;
-        long nowTime = System.currentTimeMillis() / 1000;
-        if (nowTime - lastTime < 300){
-            return;
-        }
 
         String requestBody = IndexController.loadJSON("http://42.51.174.12:8877/getAllPolog");
         JSONArray jsStr = JSONObject.parseArray(requestBody);
@@ -36,6 +31,13 @@ public class TimeJob implements Runnable {
        JSONObject item = jsStr.getJSONObject(0);
         int nowId = item.getInteger("id");
         if (lastMsgId != nowId){
+
+            long lastTime = IndexController.lastTime;
+            long nowTime = System.currentTimeMillis() / 1000;
+            if (nowTime - lastTime < 60){
+                lastMsgId = nowId;
+                return;
+            }
 
             StringBuffer emailContent = new StringBuffer("");
             for (int i=jsStr.size();i>0;i--){
