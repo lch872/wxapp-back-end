@@ -1,10 +1,10 @@
 package com.oneway.tools.redirector;
 
+import com.jfinal.plugin.cron4j.Cron4jPlugin;
 import com.jfinal.plugin.druid.DruidPlugin;
 import com.jfinal.config.*;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
 import com.jfinal.template.Engine;
-import com.oneway.tools.redirector.model.Report;
 import com.oneway.tools.redirector.model._MappingKit;
 import com.oneway.tools.redirector.web.controller.IndexController;
 import com.oneway.tools.redirector.web.controller.WXAppController;
@@ -39,6 +39,9 @@ public class AppConfig extends JFinalConfig {
         ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
         me.add(arp);
         _MappingKit.mapping(arp);
+
+        Cron4jPlugin cp = new Cron4jPlugin("cron4j.properties");//直接配置cron4j
+        me.add(cp);
 //
     }
 

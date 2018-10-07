@@ -133,7 +133,17 @@ static boolean isEnable = true;
         }
     }
 
-	    public static String loadJSON(String url) {
+    static long lastTime = 0;
+    public void getMsg() {
+
+        lastTime = Long.parseLong(getPara("t"));
+        String url = "http://42.51.174.12:8877/getAllPolog";
+        String json = loadJSON(url);
+        renderText(json);
+    }
+
+
+    public static String loadJSON(String url) {
         StringBuilder json = new StringBuilder();
         try {
             URL oracle = new URL(url);
@@ -150,6 +160,11 @@ static boolean isEnable = true;
         }
         return json.toString();
     }
+
+
+
+
+
 
     public void getdata() throws Exception {
         String time = getPara("time", "2018-1-24");

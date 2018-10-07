@@ -25,7 +25,7 @@ import static com.jfinal.plugin.activerecord.Db.find;
 
 public class WXAppController extends Controller {
 
-    Log lo = Log.getLog(WXAppController.class);
+    Log log = Log.getLog(WXAppController.class);
 
     public void detail() throws Exception {
         System.out.println("detail");
