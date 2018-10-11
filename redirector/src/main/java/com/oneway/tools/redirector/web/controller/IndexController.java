@@ -102,7 +102,7 @@ public class IndexController extends Controller {
     }
 
 static boolean isEnable = true;
-    public void jack8a() {
+    public void getBet() {
         String eStr = getPara("enable");
          if (eStr!=null){
              isEnable = eStr.equals("1");
@@ -141,6 +141,22 @@ static boolean isEnable = true;
         String json = loadJSON(url);
         renderText(json);
     }
+
+
+    public void getOnline() {
+        String url = "http://42.51.196.4:8877/cross/getAllOnLineClient";
+        String json = loadJSON(url);
+        renderText(json);
+    }
+
+    public void getSearch() {
+        String url = "http://42.51.174.12:8877/getAllSearchRecords?page=1&rows=20";
+        String json = loadJSON(url);
+        renderText(json);
+    }
+
+
+
 
 
     public static String loadJSON(String url) {
