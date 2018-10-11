@@ -2,6 +2,7 @@
 /home/onewaytestcn/wxapp-back-end/redirector/src/main/java/com/oneway/tools/redirector/model/Userlist.java
 /home/onewaytestcn/wxapp-back-end/redirector/src/main/java/com/oneway/tools/redirector/web/controller/__JFinalGenerator.java
 /home/onewaytestcn/wxapp-back-end/redirector/src/main/java/com/oneway/tools/redirector/model/_MappingKit.java
+/home/onewaytestcn/wxapp-back-end/redirector/src/main/java/com/oneway/tools/redirector/web/controller/TimeJob.java
 /home/onewaytestcn/wxapp-back-end/redirector/src/main/java/com/oneway/tools/redirector/model/Applyinfo.java
 /home/onewaytestcn/wxapp-back-end/redirector/src/main/java/com/oneway/tools/redirector/model/base/BaseApplyinfo.java
 /home/onewaytestcn/wxapp-back-end/redirector/src/main/java/com/oneway/tools/redirector/web/controller/WXAppController.java
